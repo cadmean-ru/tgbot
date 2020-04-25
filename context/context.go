@@ -10,6 +10,8 @@ type UpdateContext struct {
 	FromId       int
 	Text         string
 	CallbackData string
+	Contact      *tgbotapi.Contact
+	Location     *tgbotapi.Location
 }
 
 //Send text message in context of current update (to chat id)

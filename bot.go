@@ -127,8 +127,12 @@ func (b *Bot) Start() error {
 func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 	chatId, fromId := utils.GetChatFromId(update)
 	var text string
+	var contact *tgbotapi.Contact
+	var location *tgbotapi.Location
 	if update.Message != nil {
 		text = update.Message.Text
+		contact = update.Message.Contact
+		location = update.Message.Location
 	}
 	var data string
 	if update.CallbackQuery != nil {
@@ -142,6 +146,8 @@ func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 		FromId:       fromId,
 		Text:         text,
 		CallbackData: data,
+		Contact:      contact,
+		Location:     location,
 	}
 
 	return ctx
