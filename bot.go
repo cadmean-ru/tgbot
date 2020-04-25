@@ -188,7 +188,7 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 
 	var next = ""
 
-	next, err := step.Handler(ctx)
+	next, err := step.Handler(ctx, state)
 	if err != nil {
 		b.handleError(err)
 		return
@@ -198,8 +198,6 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 	if state.Step == "" {
 		state.Scenario = ""
 		state.Data = nil
-	} else {
-		state.Data = ctx.Data
 	}
 }
 

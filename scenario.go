@@ -7,7 +7,7 @@ import (
 
 //The first return should be the name of the next step or "" for the scenario to be terminated.
 //The error is not nil, error handler will be called.
-type StepHandler func(ctx *context.UpdateContext) (string, error)
+type StepHandler func(ctx *context.UpdateContext, state *context.State) (string, error)
 
 //Scenario (or use case, or user flow)
 //Consists of several steps. A step consists of user input and bot response.

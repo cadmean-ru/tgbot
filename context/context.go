@@ -10,7 +10,6 @@ type UpdateContext struct {
 	FromId       int
 	Text         string
 	CallbackData string
-	Data         map[string]interface{}
 }
 
 //Send text message in context of current update (to chat id)
