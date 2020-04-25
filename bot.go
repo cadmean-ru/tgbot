@@ -14,7 +14,7 @@ type UpdateHandler func(ctx *context.UpdateContext) error
 type ErrorHandler func(err error)
 
 type Bot struct {
-	tgBot          *tgbotapi.BotAPI
+	TgBot          *tgbotapi.BotAPI
 	handlers       map[string]UpdateHandler
 	defaultHandler UpdateHandler
 	scenarios      []*Scenario
@@ -33,8 +33,8 @@ func NewBot(key string, debug bool) (*Bot, error) {
 	bot.Debug = debug
 
 	return &Bot{
-		tgBot:    bot,
-		handlers: make(map[string]UpdateHandler),
+		TgBot:     bot,
+		handlers:  make(map[string]UpdateHandler),
 		scenarios: make([]*Scenario, 0),
 	}, nil
 }
@@ -74,7 +74,7 @@ func (b *Bot) HandleError(handler ErrorHandler) {
 func (b *Bot) Start() error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-	updates, err := b.tgBot.GetUpdatesChan(u)
+	updates, err := b.TgBot.GetUpdatesChan(u)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 
 	ctx := context.UpdateContext{
 		Update:       update,
-		Bot:          b.tgBot,
+		Bot:          b.TgBot,
 		ChatId:       chatId,
 		FromId:       fromId,
 		Text:         text,

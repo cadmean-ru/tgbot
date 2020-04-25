@@ -22,3 +22,7 @@ func (ctx *UpdateContext) SendText(text string, markup ...tgbotapi.ReplyKeyboard
 	ctx.Bot.Send(msg)
 }
 
+//Sends location in current context
+func (ctx *UpdateContext) SendLocation(lat, lng float64) {
+	ctx.Bot.Send(tgbotapi.NewLocation(ctx.ChatId, lat, lng))
+}
