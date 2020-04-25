@@ -11,7 +11,7 @@ import (
 type UpdateHandler func(ctx *context.UpdateContext) error
 
 //Function to be called when update handler returns sn error.
-type ErrorHandler func(err error)
+type ErrorHandler func(ctx *context.UpdateContext, err error)
 
 type Bot struct {
 	TgBot          *tgbotapi.BotAPI
