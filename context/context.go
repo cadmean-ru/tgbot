@@ -27,3 +27,18 @@ func (ctx *UpdateContext) SendText(text string, markup ...tgbotapi.ReplyKeyboard
 func (ctx *UpdateContext) SendLocation(lat, lng float64) {
 	ctx.Bot.Send(tgbotapi.NewLocation(ctx.ChatId, lat, lng))
 }
+
+//Sends message as html
+func (ctx *UpdateContext) SendHTML(text string, markup ...tgbotapi.ReplyKeyboardMarkup) {
+	msg := tgbotapi.NewMessage(ctx.ChatId, text)
+	msg.ParseMode = tgbotapi.ModeHTML
+	if len(markup) == 1 {
+		msg.ReplyMarkup = markup[0]
+	}
+	ctx.Bot.Send(msg)
+}
+
+//Sends photo upload
+func (ctx *UpdateContext) SendPhoto(path string) {
+	ctx.Bot.Send(tgbotapi.NewPhotoUpload(ctx.ChatId, path))
+}
