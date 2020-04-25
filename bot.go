@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-//Function to handle message or callbacks.
+//Function to handle message or callbacks. 
 //If it returns an error error handler will be called.
 type UpdateHandler func(ctx *context.UpdateContext) error
 
