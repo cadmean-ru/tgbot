@@ -98,7 +98,7 @@ func (b *Bot) Start() error {
 
 			state, err := b.StateProvider.Load(ctx)
 			if err != nil {
-				b.handleError(&ctx, err)
+				b.handleDefault(&ctx)
 				continue
 			}
 
