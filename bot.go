@@ -83,7 +83,7 @@ func (b *Bot) Start() error {
 		ctx := b.resolveUpdate(&update)
 
 		if h := b.resolveCommand(ctx.Text); h != nil {
-			b.handleError(h(&ctx))
+			b.handleError(&ctx, h(&ctx))
 			continue
 		}
 
@@ -92,13 +92,13 @@ func (b *Bot) Start() error {
 				state := context.State{ Scenario: s.Name }
 				b.handleScenario(*s, &ctx, &state)
 				err := b.StateProvider.Save(ctx, state)
-				b.handleError(err)
+				b.handleError(&ctx, err)
 				continue
 			}
 
 			state, err := b.StateProvider.Load(ctx)
 			if err != nil {
-				b.handleError(err)
+				b.handleError(&ctx, err)
 				continue
 			}
 
@@ -112,12 +112,12 @@ func (b *Bot) Start() error {
 				}
 				b.handleScenario(s, &ctx, &state)
 				err := b.StateProvider.Save(ctx, state)
-				b.handleError(err)
+				b.handleError(&ctx, err)
 				continue
 			}
 		}
 
-		b.handleDefault(ctx)
+		b.handleDefault(&ctx)
 	}
 
 	return nil
@@ -196,7 +196,7 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 
 	next, err := step.Handler(ctx, state)
 	if err != nil {
-		b.handleError(err)
+		b.handleError(ctx, err)
 		return
 	}
 
@@ -208,14 +208,14 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 }
 
 
-func (b *Bot) handleError(err error) {
+func (b *Bot) handleError(ctx *context.UpdateContext, err error) {
 	if err != nil && b.errorHandler != nil {
-		b.errorHandler(err)
+		b.errorHandler(ctx, err)
 	}
 }
 
-func (b *Bot) handleDefault(ctx context.UpdateContext) {
+func (b *Bot) handleDefault(ctx *context.UpdateContext) {
 	if b.defaultHandler != nil {
-		b.handleError(b.defaultHandler(&ctx))
+		b.handleError(ctx, b.defaultHandler(ctx))
 	}
 }
