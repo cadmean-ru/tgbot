@@ -15,7 +15,7 @@ type UpdateContext struct {
 }
 
 //Send text message in context of current update (to chat id)
-func (ctx *UpdateContext) SendText(text string, markup ...tgbotapi.ReplyKeyboardMarkup) {
+func (ctx *UpdateContext) SendText(text string, markup ...interface{}) {
 	msg := tgbotapi.NewMessage(ctx.ChatId, text)
 	if len(markup) == 1 {
 		msg.ReplyMarkup = markup[0]
@@ -29,7 +29,7 @@ func (ctx *UpdateContext) SendLocation(lat, lng float64) {
 }
 
 //Sends message as html
-func (ctx *UpdateContext) SendHTML(text string, markup ...tgbotapi.ReplyKeyboardMarkup) {
+func (ctx *UpdateContext) SendHTML(text string, markup ...interface{}) {
 	msg := tgbotapi.NewMessage(ctx.ChatId, text)
 	msg.ParseMode = tgbotapi.ModeHTML
 	if len(markup) == 1 {
