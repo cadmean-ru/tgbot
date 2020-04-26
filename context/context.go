@@ -42,3 +42,10 @@ func (ctx *UpdateContext) SendHTML(text string, markup ...interface{}) {
 func (ctx *UpdateContext) SendPhoto(path string) {
 	ctx.Bot.Send(tgbotapi.NewPhotoUpload(ctx.ChatId, path))
 }
+
+//Answer callback query in the current context
+func (ctx *UpdateContext) AnswerCallbackQuery(text string) {
+	if ctx.Update.CallbackQuery != nil {
+		_, _ = ctx.Bot.AnswerCallbackQuery(tgbotapi.NewCallback(ctx.Update.CallbackQuery.ID, text))
+	}
+}

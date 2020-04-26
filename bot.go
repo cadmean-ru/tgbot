@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-//Function to handle message or callbacks. 
+//Function to handle message or callbacks.
 //If it returns an error error handler will be called.
 type UpdateHandler func(ctx *context.UpdateContext) error
 
@@ -14,12 +14,14 @@ type UpdateHandler func(ctx *context.UpdateContext) error
 type ErrorHandler func(ctx *context.UpdateContext, err error)
 
 type Bot struct {
-	TgBot          *tgbotapi.BotAPI
-	handlers       map[string]UpdateHandler
-	defaultHandler UpdateHandler
-	scenarios      []*Scenario
-	errorHandler   ErrorHandler
-	StateProvider  context.StateProvider
+	TgBot                     *tgbotapi.BotAPI
+	handlers                  map[string]UpdateHandler
+	defaultHandler            UpdateHandler
+	allHandler                UpdateHandler
+	scenarios                 []*Scenario
+	errorHandler              ErrorHandler
+	StateProvider             context.StateProvider
+	AutoAnswerCallbackQueries bool
 }
 
 //Created a new bot with specified key.
@@ -70,6 +72,12 @@ func (b *Bot) HandleError(handler ErrorHandler) {
 	b.errorHandler = handler
 }
 
+//Register handler that will be called for all updates before any other handlers.
+//Note, error returned from this handler will not stop further command resolution.
+func (b *Bot) HandleAll(handler UpdateHandler) {
+	b.allHandler = handler
+}
+
 //Start receiving updates
 func (b *Bot) Start() error {
 	u := tgbotapi.NewUpdate(0)
@@ -82,6 +90,12 @@ func (b *Bot) Start() error {
 	for update := range updates {
 		ctx := b.resolveUpdate(&update)
 
+		b.handleAll(&ctx)
+
+		if b.AutoAnswerCallbackQueries {
+			b.answerCallbackQuery(ctx)
+		}
+
 		if h := b.resolveCommand(ctx.Text); h != nil {
 			b.handleError(&ctx, h(&ctx))
 			continue
@@ -89,7 +103,7 @@ func (b *Bot) Start() error {
 
 		if b.StateProvider != nil {
 			if s := b.resolveScenario(ctx.Text); s != nil {
-				state := context.State{ Scenario: s.Name }
+				state := context.State{Scenario: s.Name}
 				b.handleScenario(*s, &ctx, &state)
 				err := b.StateProvider.Save(ctx, state)
 				b.handleError(&ctx, err)
@@ -123,7 +137,6 @@ func (b *Bot) Start() error {
 	return nil
 }
 
-
 func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 	chatId, fromId := utils.GetChatFromId(update)
 	var text string
@@ -152,8 +165,6 @@ func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 
 	return ctx
 }
-
-
 
 func (b *Bot) resolveCommand(command string) UpdateHandler {
 	if h, ok := b.handlers[command]; ok {
@@ -207,7 +218,6 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 	}
 }
 
-
 func (b *Bot) handleError(ctx *context.UpdateContext, err error) {
 	if err != nil && b.errorHandler != nil {
 		b.errorHandler(ctx, err)
@@ -217,5 +227,17 @@ func (b *Bot) handleError(ctx *context.UpdateContext, err error) {
 func (b *Bot) handleDefault(ctx *context.UpdateContext) {
 	if b.defaultHandler != nil {
 		b.handleError(ctx, b.defaultHandler(ctx))
+	}
+}
+
+func (b *Bot) handleAll(ctx *context.UpdateContext) {
+	if b.allHandler != nil {
+		b.handleError(ctx, b.allHandler(ctx))
+	}
+}
+
+func (b *Bot) answerCallbackQuery(ctx context.UpdateContext) {
+	if ctx.Update.CallbackQuery != nil {
+		_, _ = ctx.Bot.AnswerCallbackQuery(tgbotapi.NewCallback(ctx.Update.CallbackQuery.ID, ctx.Update.CallbackQuery.Data))
 	}
 }
