@@ -87,51 +87,53 @@ func (b *Bot) Start() error {
 		return err
 	}
 
-	for update := range updates {
-		ctx := b.resolveUpdate(&update)
+	for u := range updates {
+		go func(update tgbotapi.Update) {
+			ctx := b.resolveUpdate(&update)
 
-		b.handleAll(&ctx)
+			b.handleAll(&ctx)
 
-		if b.AutoAnswerCallbackQueries {
-			b.answerCallbackQuery(ctx)
-		}
-
-		if h := b.resolveCommand(ctx.Text); h != nil {
-			b.handleError(&ctx, h(&ctx))
-			continue
-		}
-
-		if b.StateProvider != nil {
-			if s := b.resolveScenario(ctx.Text); s != nil {
-				state := context.State{Scenario: s.Name}
-				b.handleScenario(*s, &ctx, &state)
-				err := b.StateProvider.Save(ctx, state)
-				b.handleError(&ctx, err)
-				continue
+			if b.AutoAnswerCallbackQueries {
+				b.answerCallbackQuery(ctx)
 			}
 
-			state, err := b.StateProvider.Load(ctx)
-			if err != nil {
-				b.handleDefault(&ctx)
-				continue
+			if h := b.resolveCommand(ctx.Text); h != nil {
+				b.handleError(&ctx, h(&ctx))
+				return
 			}
 
-			if state.Scenario != "" && state.Step != "" {
-				var s Scenario
-				for _, s1 := range b.scenarios {
-					if s1.Name == state.Scenario {
-						s = *s1
-						break
-					}
+			if b.StateProvider != nil {
+				if s := b.resolveScenario(ctx.Text); s != nil {
+					state := context.State{Scenario: s.Name}
+					b.handleScenario(*s, &ctx, &state)
+					err := b.StateProvider.Save(ctx, state)
+					b.handleError(&ctx, err)
+					return
 				}
-				b.handleScenario(s, &ctx, &state)
-				err := b.StateProvider.Save(ctx, state)
-				b.handleError(&ctx, err)
-				continue
-			}
-		}
 
-		b.handleDefault(&ctx)
+				state, err := b.StateProvider.Load(ctx)
+				if err != nil {
+					b.handleDefault(&ctx)
+					return
+				}
+
+				if state.Scenario != "" && state.Step != "" {
+					var s Scenario
+					for _, s1 := range b.scenarios {
+						if s1.Name == state.Scenario {
+							s = *s1
+							break
+						}
+					}
+					b.handleScenario(s, &ctx, &state)
+					err := b.StateProvider.Save(ctx, state)
+					b.handleError(&ctx, err)
+					return
+				}
+			}
+
+			b.handleDefault(&ctx)
+		}(u)
 	}
 
 	return nil
