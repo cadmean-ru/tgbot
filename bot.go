@@ -163,6 +163,7 @@ func (b *Bot) resolveUpdate(update *tgbotapi.Update) context.UpdateContext {
 		CallbackData: data,
 		Contact:      contact,
 		Location:     location,
+		TgBot:        b,
 	}
 
 	return ctx
@@ -192,6 +193,7 @@ func (b *Bot) handleScenario(s Scenario, ctx *context.UpdateContext, state *cont
 	var step Step
 	if state.Step == "" {
 		step = s.Steps[0]
+		state.Data = make(map[string]interface{})
 	} else {
 		for _, s := range s.Steps {
 			if s.Name == state.Step {
@@ -242,4 +244,29 @@ func (b *Bot) answerCallbackQuery(ctx context.UpdateContext) {
 	if ctx.Update.CallbackQuery != nil {
 		_, _ = ctx.Bot.AnswerCallbackQuery(tgbotapi.NewCallback(ctx.Update.CallbackQuery.ID, ctx.Update.CallbackQuery.Data))
 	}
+}
+
+func (b *Bot) TriggerScenario(ctx *context.UpdateContext, name string) {
+	if b.StateProvider == nil {
+		return
+	}
+
+	var scenario *Scenario
+	for _, s := range b.scenarios {
+		if s.Name == name {
+			scenario = s
+		}
+	}
+	if scenario == nil {
+		return
+	}
+
+	state := context.State{
+		Step:     "",
+		Scenario: name,
+	}
+
+	b.handleScenario(*scenario, ctx, &state)
+
+	b.handleError(ctx, b.StateProvider.Save(*ctx, state))
 }

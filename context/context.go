@@ -1,6 +1,8 @@
 package context
 
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+)
 
 //Context of update
 type UpdateContext struct {
@@ -12,6 +14,7 @@ type UpdateContext struct {
 	CallbackData string
 	Contact      *tgbotapi.Contact
 	Location     *tgbotapi.Location
+	TgBot        TgBot
 }
 
 //Send text message in context of current update (to chat id)
@@ -48,4 +51,9 @@ func (ctx *UpdateContext) AnswerCallbackQuery(text string) {
 	if ctx.Update.CallbackQuery != nil {
 		_, _ = ctx.Bot.AnswerCallbackQuery(tgbotapi.NewCallback(ctx.Update.CallbackQuery.ID, text))
 	}
+}
+
+//Triggers specified scenario for current user
+func (ctx *UpdateContext) TriggerScenario(name string) {
+	ctx.TgBot.TriggerScenario(ctx, name)
 }
