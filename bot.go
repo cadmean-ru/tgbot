@@ -103,16 +103,16 @@ func (b *Bot) Start() error {
 
 			b.handleAll(&ctx)
 
+			if b.AutoAnswerCallbackQueries {
+				b.answerCallbackQuery(ctx)
+			}
+
 			if b.callbackHandler != nil && ctx.CallbackData != "" {
 				ok, err := b.callbackHandler(&ctx)
 				b.handleError(&ctx, err)
 				if ok {
 					return
 				}
-			}
-
-			if b.AutoAnswerCallbackQueries {
-				b.answerCallbackQuery(ctx)
 			}
 
 			if h := b.resolveCommand(ctx.Text); h != nil {
