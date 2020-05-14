@@ -13,11 +13,16 @@ type UpdateHandler func(ctx *context.UpdateContext) error
 //Function to be called when update handler returns sn error.
 type ErrorHandler func(ctx *context.UpdateContext, err error)
 
+//Function to handle any incoming callback query.
+//Returns if the callback was handled or not.
+type CallbackHandler func(ctx *context.UpdateContext) (bool, error)
+
 type Bot struct {
 	TgBot                     *tgbotapi.BotAPI
 	handlers                  map[string]UpdateHandler
 	defaultHandler            UpdateHandler
 	allHandler                UpdateHandler
+	callbackHandler           CallbackHandler
 	scenarios                 []*Scenario
 	errorHandler              ErrorHandler
 	StateProvider             context.StateProvider
@@ -78,6 +83,11 @@ func (b *Bot) HandleAll(handler UpdateHandler) {
 	b.allHandler = handler
 }
 
+//Register handler that will be called for all updates with callback queries.
+func (b *Bot) HandleCallbacks(handler CallbackHandler) {
+	b.callbackHandler = handler
+}
+
 //Start receiving updates
 func (b *Bot) Start() error {
 	u := tgbotapi.NewUpdate(0)
@@ -92,6 +102,14 @@ func (b *Bot) Start() error {
 			ctx := b.resolveUpdate(&update)
 
 			b.handleAll(&ctx)
+
+			if b.callbackHandler != nil && ctx.CallbackData != "" {
+				ok, err := b.callbackHandler(&ctx)
+				b.handleError(&ctx, err)
+				if ok {
+					return
+				}
+			}
 
 			if b.AutoAnswerCallbackQueries {
 				b.answerCallbackQuery(ctx)
